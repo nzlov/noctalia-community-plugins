@@ -10,6 +10,7 @@ local PLUGIN_CACHE_DIR = "daily-wallpaper"
 local checking = false
 local lastAppliedPath = ""
 local lastCheckedKey = ""
+local lastErrorNotificationDate = ""
 
 noctalia.setUpdateInterval(CHECK_INTERVAL_MS)
 
@@ -23,7 +24,7 @@ local function normalizeLocale(value)
   end
 
   local locale = noctalia.string.trim(value):lower():gsub("_", "-")
-  if locale == "" then
+  if locale == "" or locale:find("[^%w%-]") then
     return "en-us"
   end
   return locale
@@ -38,16 +39,7 @@ local function source()
 end
 
 local function downloadDir()
-  local wallpaperDir = noctalia.wallpaperDirectory()
-  if type(wallpaperDir) == "string" and wallpaperDir ~= "" then
-    return noctalia.expandPath(wallpaperDir)
-  end
-
-  local stateHome = noctalia.getenv("XDG_STATE_HOME")
-  if type(stateHome) ~= "string" or stateHome == "" then
-    stateHome = (noctalia.getenv("HOME") or "") .. "/.local/state"
-  end
-  return noctalia.expandPath(`{stateHome}/noctalia/{PLUGIN_CACHE_DIR}`)
+  return noctalia.expandPath(`{noctalia.wallpaperDirectory()}/{PLUGIN_CACHE_DIR}`)
 end
 
 local function cachePath(prefix, date)
@@ -98,7 +90,7 @@ local function cleanupOldWallpapers(dir)
 
   local cutoff = os.time() - RETENTION_SECONDS
   for _, name in ipairs(entries) do
-    if name:match("^bing%-%d%d%d%d%-%d%d%-%d%d%.jpg$") or name:match("^nasa%-%d%d%d%d%-%d%d%-%d%d%.jpg$") then
+    if name:match("^bing%-.+%-%d%d%d%d%-%d%d%-%d%d%.jpg$") or name:match("^nasa%-%d%d%d%d%-%d%d%-%d%d%.jpg$") then
       local path = `{dir}/{name}`
       local info = noctalia.fileInfo(path)
       if type(info) == "table" and type(info.mtime) == "number" and info.mtime < cutoff then
@@ -114,7 +106,11 @@ local function fail(message)
     state = "error",
     message = message,
   })
-  noctalia.notifyError(noctalia.tr("notify.failed"), message)
+  local date = todayString()
+  if lastErrorNotificationDate ~= date then
+    lastErrorNotificationDate = date
+    noctalia.notifyError(noctalia.tr("notify.failed"), message)
+  end
   noctalia.log(`Daily Wallpaper failed: {message}`)
 end
 
@@ -174,7 +170,7 @@ local function resolveBing(locale, done)
       return
     end
 
-    done("bing", `https://www.bing.com{urlBase}_UHD.jpg`, `https://www.bing.com{urlBase}_1920x1080.jpg`)
+    done(`bing-{locale}`, `https://www.bing.com{urlBase}_UHD.jpg`, `https://www.bing.com{urlBase}_1920x1080.jpg`)
   end)
 
   if not started then
@@ -218,12 +214,14 @@ local function fetchAndApply(force)
 
   local selectedSource = source()
   local date = todayString()
+  local locale = normalizeLocale(noctalia.getConfig("locale"))
   local key = `{selectedSource}:{date}`
   if not force and key == lastCheckedKey then
     return
   end
 
-  local dest = cachePath(selectedSource, date)
+  local cachePrefix = selectedSource == "bing" and `bing-{locale}` or selectedSource
+  local dest = cachePath(cachePrefix, date)
   if not force and dest == lastAppliedPath then
     lastCheckedKey = key
     return
@@ -242,7 +240,7 @@ local function fetchAndApply(force)
     source = selectedSource,
   })
 
-  if noctalia.fileExists(dest) then
+  if not force and noctalia.fileExists(dest) then
     checking = false
     cleanupOldWallpapers(dir)
     applyWallpaper(dest, false)
@@ -257,7 +255,7 @@ local function fetchAndApply(force)
   if selectedSource == "nasa" then
     resolveNasa(onResolved)
   else
-    resolveBing(normalizeLocale(noctalia.getConfig("locale")), onResolved)
+    resolveBing(locale, onResolved)
   end
 end
 
