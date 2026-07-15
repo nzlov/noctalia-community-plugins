@@ -111,17 +111,17 @@ default         = 10
 min             = 5
 
 [[setting]]
-key             = "show_checking_notification"
+key             = "show_update_check_notification"
 type            = "bool"
-label_key       = "setting.checking_notification.label"
-description_key = "setting.checking_notification.description"
+label_key       = "setting.show_update_check_notification.label"
+description_key = "setting.show_update_check_notification.description"
 default         = false
 
 [[setting]]
-key             = "show_update_notification"
+key             = "show_update_available_notification"
 type            = "bool"
-label_key       = "setting.show_update_notification.label"
-description_key = "setting.show_update_notification.description"
+label_key       = "setting.show_update_available_notification.label"
+description_key = "setting.show_update_available_notification.description"
 default         = true
 
 [[setting]]

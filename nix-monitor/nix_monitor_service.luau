@@ -44,7 +44,7 @@ local closureSizeFile = stateDir .. "/closureSize"
 local remotePidFile = stateDir .. "/remoteHash.pid"
 local storePidFile = stateDir .. "/storeSize.pid"
 local closurePidFile = stateDir .. "/closureSize.pid"
-local showUpdateNotification = true
+local showUpdateAvailableNotification = true
 
 local localHashCmd  = "nixos-version --hash 2> /dev/null | cut -c -7"
 local remoteHashCmd = "git ls-remote https://github.com/NixOS/nixpkgs " .. branch .. " 2>/dev/null | cut -c 1-7"
@@ -102,7 +102,7 @@ function checkRemoteHash(delay: number?)
     setState("isRemoteCheckRunning", true)
     setState("lastRemoteCheckRunTime", os.time())
 
-    if cfg("show_checking_notification") then
+    if cfg("show_update_check_notification") then
         noctalia.notify(tr("notification.checking_update"))
     end
 
@@ -122,7 +122,7 @@ function checkRemoteStatus()
 end
 
 function onRemoteHashCheckCompleted()
-    if cfg("show_checking_notification") then
+    if cfg("show_update_check_notification") then
         noctalia.notify(tr("notification.update_check_completed"))
     end
 
@@ -253,13 +253,13 @@ function update()
     then
         setState("isUpdateAvailable", true)
 
-        if cfg("show_update_notification") and showUpdateNotification then
+        if cfg("show_update_available_notification") and showUpdateAvailableNotification then
             noctalia.notify(tr("notification.update_is_available"))
-            showUpdateNotification = false
+            showUpdateAvailableNotification = false
         end
     else
         setState("isUpdateAvailable", false)
-        showUpdateNotification = true
+        showUpdateAvailableNotification = true
     end
 
     -- Generations check
