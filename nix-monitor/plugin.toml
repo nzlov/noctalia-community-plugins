@@ -10,7 +10,7 @@ dependencies    = [ "nixos-version", "git", "pkill" ]
 license         = "MIT"
 
 [[widget]]
-id      = "Nix Monitor"
+id      = "nix-monitor"
 entry   = "nix_monitor.luau"
 
 [[widget.setting]]
