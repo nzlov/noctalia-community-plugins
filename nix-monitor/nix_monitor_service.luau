@@ -1,35 +1,35 @@
-noctalia.setUpdateInterval(5000)
+noctalia.setUpdateInterval(1000)
 
 -- Helper functions
 function tr(key)
-    return noctalia.tr(key)
+	return noctalia.tr(key)
 end
 
 function cfg(key)
-    return noctalia.getConfig(key)
+	return noctalia.getConfig(key)
 end
 
 function getState(key)
-    return noctalia.state.get(key)
+	return noctalia.state.get(key)
 end
 
 function setState(key, val)
-    noctalia.state.set(key, val)
+	noctalia.state.set(key, val)
 end
 
 function watchState(key, cb)
-    noctalia.state.watch(key, cb)
+	noctalia.state.watch(key, cb)
 end
 
 function killWithPidFile(file)
-    if noctalia.fileExists(file) then
-        local pid = noctalia.string.trim(noctalia.readFile(file))
+	if noctalia.fileExists(file) then
+		local pid = noctalia.string.trim(noctalia.readFile(file))
 
-        if type(pid) == "string" and pid ~= "" then
-            noctalia.runAsync(`pkill -9 -P {pid} && kill -9 {pid}`)
-        end
-        noctalia.removeFile(file)
-    end
+		if type(pid) == "string" and pid ~= "" then
+			noctalia.runAsync(`pkill -9 -P {pid} && kill -9 {pid}`)
+		end
+		noctalia.removeFile(file)
+	end
 end
 
 -- Vars
@@ -47,14 +47,14 @@ local storePidFile = stateDir .. "/storeSize.pid"
 local closurePidFile = stateDir .. "/closureSize.pid"
 local showUpdateAvailableNotification = true
 
-local localHashCmd  = "nixos-version --hash 2> /dev/null | cut -c -7"
+local localHashCmd = "nixos-version --hash 2> /dev/null | cut -c -7"
 local remoteHashCmd = "git ls-remote https://github.com/NixOS/nixpkgs " .. branch .. " 2>/dev/null | cut -c 1-7"
 local nixosGenerationsCmd = "nixos-rebuild list-generations | tail -n +2 | wc -l"
 local nixosCurrentGenCmd = "nixos-rebuild list-generations | grep True | awk '{print $1}'"
 local hmGenerationsCmd = "home-manager generations | wc -l"
 local hmCurrentGenCmd = "home-manager generations | grep '(current)' | awk '{print $5}'"
-local storeSizeCmd = "du -s --block-size=1GiB /nix/store | awk '\{print $1 \" GiB\"\}'"
-local closureSizeCmd = "nix path-info --closure-size --human-readable /run/current-system | awk '\{print $2, $3\}'"
+local storeSizeCmd = "du -s --block-size=1GiB /nix/store | awk '{print $1 \" GiB\"}'"
+local closureSizeCmd = "nix path-info --closure-size --human-readable /run/current-system | awk '{print $2, $3}'"
 
 -- State inits
 setState("lastLocalCheckTime", os.time())
@@ -82,12 +82,12 @@ noctalia.writeFile(remoteHashFile, "")
 
 -- Local check
 function checkLocalHash()
-    setState("lastLocalCheckTime", os.time())
-    noctalia.runAsync(localHashCmd, function(res)
-        if res.exitCode == 0 then
-            setState("localHash", noctalia.string.trim(res.stdout))
-        end
-    end)
+	setState("lastLocalCheckTime", os.time())
+	noctalia.runAsync(localHashCmd, function(res)
+		if res.exitCode == 0 then
+			setState("localHash", noctalia.string.trim(res.stdout))
+		end
+	end)
 end
 
 -- Remote check
@@ -95,116 +95,118 @@ end
 -- Currently it is writing to a file because when I use the runAsync with
 -- the callback, it is timed out
 function checkRemoteHash(delay: number?)
-    local delay = delay or 0
+	local delay = delay or 0
 
-    if getState("isRemoteCheckRunning") then
-        return
-    end
+	if getState("isRemoteCheckRunning") then
+		return
+	end
 
-    setState("isRemoteCheckRunning", true)
-    setState("lastRemoteCheckRunTime", os.time())
+	setState("isRemoteCheckRunning", true)
+	setState("lastRemoteCheckRunTime", os.time())
 
-    if cfg("show_update_check_notification") then
-        noctalia.notify(tr("notification.checking_update"))
-    end
+	if cfg("show_update_check_notification") then
+		noctalia.notify(tr("notification.checking_update"))
+	end
 
-    noctalia.writeFile(remoteHashFile, "")
-    noctalia.runAsync(`sleep {delay} && {remoteHashCmd} > {remoteHashFile} & echo $! > {remotePidFile}`)
+	noctalia.writeFile(remoteHashFile, "")
+	noctalia.runAsync(`sleep {delay} && {remoteHashCmd} > {remoteHashFile} & echo $! > {remotePidFile}`)
 end
 
 -- Check if the remoteHash check command is finished by reading the file
 function checkRemoteStatus()
-    local remoteHash = noctalia.string.trim(noctalia.readFile(remoteHashFile))
+	local remoteHash = noctalia.string.trim(noctalia.readFile(remoteHashFile))
 
-    if type(remoteHash) == "string" and remoteHash ~= "" then
-        setState("isRemoteCheckRunning", false)
-        setState("remoteHash", remoteHash)
-        onRemoteHashCheckCompleted()
-    end
+	if type(remoteHash) == "string" and remoteHash ~= "" then
+		setState("isRemoteCheckRunning", false)
+		setState("remoteHash", remoteHash)
+		onRemoteHashCheckCompleted()
+	end
 end
 
 function onRemoteHashCheckCompleted()
-    if cfg("show_update_check_notification") then
-        noctalia.notify(tr("notification.update_check_completed"))
-    end
+	if cfg("show_update_check_notification") then
+		noctalia.notify(tr("notification.update_check_completed"))
+	end
 
-    setState("lastRemoteCheckTime", os.time())
+	setState("lastRemoteCheckTime", os.time())
 
-    local date = noctalia.formatTime("%Y-%m-%d %H:%M:%S")
-    setState("lastRemoteCheckTimeStr", date)
+	local date = noctalia.formatTime("%Y-%m-%d %H:%M:%S")
+	setState("lastRemoteCheckTimeStr", date)
 
-    noctalia.removeFile(remotePidFile)
+	noctalia.removeFile(remotePidFile)
 end
 
 function cancelRemoteCheck()
-    setState("isRemoteCheckRunning", false)
-    killWithPidFile(remotePidFile)
+	setState("isRemoteCheckRunning", false)
+	killWithPidFile(remotePidFile)
 end
 
 -- Generation check
 function checkGenerations()
-    setState("lastGenerationsCheckTime", os.time())
+	setState("lastGenerationsCheckTime", os.time())
 
-    noctalia.runAsync(nixosGenerationsCmd, function(result)
-        setState("nixosGenerations", result.stdout)
-    end)
+	noctalia.runAsync(nixosGenerationsCmd, function(result)
+		setState("nixosGenerations", noctalia.string.trim(result.stdout))
+	end)
 
-    noctalia.runAsync(nixosCurrentGenCmd, function(result)
-        setState("nixosCurrentGen", result.stdout)
-    end)
+	noctalia.runAsync(nixosCurrentGenCmd, function(result)
+		setState("nixosCurrentGen", noctalia.string.trim(result.stdout))
+	end)
 
-    if getState("hasHomeManager") then
-        noctalia.runAsync(hmGenerationsCmd, function(result)
-            setState("hmGenerations", result.stdout)
-        end)
+	if getState("hasHomeManager") then
+		noctalia.runAsync(hmGenerationsCmd, function(result)
+			setState("hmGenerations", noctalia.string.trim(result.stdout))
+		end)
 
-        noctalia.runAsync(hmCurrentGenCmd, function(result)
-            setState("hmCurrentGen", result.stdout)
-        end)
-    end
+		noctalia.runAsync(hmCurrentGenCmd, function(result)
+			setState("hmCurrentGen", noctalia.string.trim(result.stdout))
+		end)
+	end
 end
 
 -- System stats check
 function checkSystemStats()
-    if getState("isSystemStatsCheckRunning") then
-        return
-    end
+	if getState("isSystemStatsCheckRunning") then
+		return
+	end
 
-    setState("isSystemStatsCheckRunning", true)
-    setState("lastSystemStatsCheckRunTime", os.time())
+	setState("isSystemStatsCheckRunning", true)
+	setState("lastSystemStatsCheckRunTime", os.time())
 
-    -- Sleep 0 to trigger noctalia calling /bin/sh
-    noctalia.runAsync(`sleep 0 && {storeSizeCmd} > {storeSizeFile} & echo $! > {storePidFile}`)
-    noctalia.runAsync(`sleep 0 && {closureSizeCmd} > {closureSizeFile} & echo $! > {closurePidFile}`)
+	-- Sleep 0 to trigger noctalia calling /bin/sh
+	noctalia.runAsync(`sleep 0 && {storeSizeCmd} > {storeSizeFile} & echo $! > {storePidFile}`)
+	noctalia.runAsync(`sleep 0 && {closureSizeCmd} > {closureSizeFile} & echo $! > {closurePidFile}`)
 end
 
 function checkSystemStatsFile()
-    local storeSize = noctalia.string.trim(noctalia.readFile(storeSizeFile))
-    local closureSize = noctalia.string.trim(noctalia.readFile(closureSizeFile))
+	local storeSize = noctalia.string.trim(noctalia.readFile(storeSizeFile))
+	local closureSize = noctalia.string.trim(noctalia.readFile(closureSizeFile))
 
-    if typeof(storeSize) == "string" and storeSize ~= "" then
-        setState("storeSize", storeSize)
-    end
+	if typeof(storeSize) == "string" and storeSize ~= "" then
+		setState("storeSize", storeSize)
+	end
 
-    if typeof(closureSize) == "string" and closureSize ~= "" then
-        setState("closureSize", closureSize)
-    end
+	if typeof(closureSize) == "string" and closureSize ~= "" then
+		setState("closureSize", closureSize)
+	end
 
-    local success = typeof(storeSize) == "string" and storeSize ~= "" and
-        typeof(closureSize) == "string" and closureSize ~= ""
+	local success = typeof(storeSize) == "string"
+		and storeSize ~= ""
+		and typeof(closureSize) == "string"
+		and closureSize ~= ""
 
-    if success then
-        setState("isSystemStatsCheckRunning", false)
-        setState("lastSystemStatsCheckTime", os.time())
-        noctalia.removeFile(storePidFile)
-        noctalia.removeFile(closurePidFile)
-    end
+	if success then
+		setState("isSystemStatsCheckRunning", false)
+		setState("lastSystemStatsCheckTime", os.time())
+		noctalia.removeFile(storePidFile)
+		noctalia.removeFile(closurePidFile)
+	end
 end
 
 function cancelSystemCheck()
-    setState("isSystemStatsCheckRunning", false)
-    killWithPidFile(storePidFile)
-    killWithPidFile(closurePidFile)
+	setState("isSystemStatsCheckRunning", false)
+	killWithPidFile(storePidFile)
+	killWithPidFile(closurePidFile)
 end
 
 -- Init
@@ -214,18 +216,18 @@ checkSystemStats()
 
 -- Command watcher
 watchState("command", function(command)
-    if command == "check" then
-        checkLocalHash()
-        cancelRemoteCheck()
-        checkRemoteHash()
-        checkGenerations()
-        checkSystemStats()
-    end
+	if command == "check" then
+		checkLocalHash()
+		cancelRemoteCheck()
+		checkRemoteHash()
+		checkGenerations()
+		checkSystemStats()
+	end
 
-    if command == "cancel" then
-        cancelRemoteCheck()
-        cancelSystemCheck()
-    end
+	if command == "cancel" then
+		cancelRemoteCheck()
+		cancelSystemCheck()
+	end
 end)
 
 --
@@ -233,60 +235,62 @@ end)
 --
 
 function update()
-    -- Check local hash every 10 seconds
-    if (os.time() - getState("lastLocalCheckTime") >= 10) then
-        checkLocalHash()
-    end
+	-- Check local hash every 10 seconds
+	if os.time() - getState("lastLocalCheckTime") >= 10 then
+		checkLocalHash()
+	end
 
-    -- Remote check
-    if (os.time() - getState("lastRemoteCheckTime")) >= 60 * updateCheckInterval then
-        checkRemoteHash()
-    end
+	-- Remote check
+	if (os.time() - getState("lastRemoteCheckTime")) >= 60 * updateCheckInterval then
+		checkRemoteHash()
+	end
 
-    if getState("isRemoteCheckRunning") then
-        checkRemoteStatus()
+	if getState("isRemoteCheckRunning") then
+		checkRemoteStatus()
 
-        -- Remote check timeout
-        if (os.time() - getState("lastRemoteCheckRunTime")) >= 60 * updateCheckDurationThreshold then
-            cancelRemoteCheck()
-        end
-    end
+		-- Remote check timeout
+		if (os.time() - getState("lastRemoteCheckRunTime")) >= 60 * updateCheckDurationThreshold then
+			cancelRemoteCheck()
+		end
+	end
 
-    if getState("localHash") ~= getState("remoteHash") and
-        getState("localHash") ~= "n/a" and getState("remoteHash") ~= "n/a"
-    then
-        setState("isUpdateAvailable", true)
+	if
+		getState("localHash") ~= getState("remoteHash")
+		and getState("localHash") ~= "n/a"
+		and getState("remoteHash") ~= "n/a"
+	then
+		setState("isUpdateAvailable", true)
 
-        if cfg("show_update_available_notification") and showUpdateAvailableNotification then
-            noctalia.notify(tr("notification.update_is_available"))
-            showUpdateAvailableNotification = false
-        end
-    else
-        setState("isUpdateAvailable", false)
-        showUpdateAvailableNotification = true
-    end
+		if cfg("show_update_available_notification") and showUpdateAvailableNotification then
+			noctalia.notify(tr("notification.update_is_available"))
+			showUpdateAvailableNotification = false
+		end
+	else
+		setState("isUpdateAvailable", false)
+		showUpdateAvailableNotification = true
+	end
 
-    -- Generations check
-    if (os.time() - getState("lastGenerationsCheckTime")) >= 20 then
-        checkGenerations()
-    end
+	-- Generations check
+	if (os.time() - getState("lastGenerationsCheckTime")) >= 10 then
+		checkGenerations()
+	end
 
-    -- System stats check
-    if (os.time() - getState("lastSystemStatsCheckTime")) >= 60 * systemStatsCheckInterval then
-        checkSystemStats()
-    end
+	-- System stats check
+	if (os.time() - getState("lastSystemStatsCheckTime")) >= 60 * systemStatsCheckInterval then
+		checkSystemStats()
+	end
 
-    if getState("isSystemStatsCheckRunning") then
-        checkSystemStatsFile()
+	if getState("isSystemStatsCheckRunning") then
+		checkSystemStatsFile()
 
-        -- System stats check timeout
-        if (os.time() - getState("lastSystemStatsCheckRunTime")) >= 60 * systemStatsCheckDurationThreshold then
-            cancelSystemCheck()
-        end
-    end
+		-- System stats check timeout
+		if (os.time() - getState("lastSystemStatsCheckRunTime")) >= 60 * systemStatsCheckDurationThreshold then
+			cancelSystemCheck()
+		end
+	end
 end
 
 function onExit(signal)
-    cancelRemoteCheck()
-    cancelSystemCheck()
+	cancelRemoteCheck()
+	cancelSystemCheck()
 end

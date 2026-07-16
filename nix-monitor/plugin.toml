@@ -1,6 +1,6 @@
 id              = "avivbintangaringga/nix-monitor"
 name            = "Nix Monitor"
-version         = "1.0.0"
+version         = "1.1.0"
 min_noctalia    = "5.0.0"
 icon            = "package"
 author          = "avivbintangaringga"
@@ -86,6 +86,32 @@ label_key   = "setting.widget.unknown_color.label"
 default     = "on_surface"
 
 [[setting]]
+key             = "branch"
+type            = "select"
+label_key       = "setting.branch.label"
+description_key = "setting.branch.description"
+options         = [
+    { value = "master", label_key = "setting.option.branch.master" },
+    { value = "nixos-unstable", label_key = "setting.option.branch.nixos_unstable" },
+    { value = "nixos-unstable-small", label_key = "setting.option.branch.nixos_unstable_small" },
+    { value = "nixos-26.05", label_key = "setting.option.branch.nixos_26_05" },
+    { value = "nixos-25.11", label_key = "setting.option.branch.nixos_25_11" },
+    { value = "nixos-25.05", label_key = "setting.option.branch.nixos_25_05" },
+    { value = "nixos-24.11", label_key = "setting.option.branch.nixos_24_11" },
+    { value = "nixos-24.05", label_key = "setting.option.branch.nixos_24_05" },
+    { value = "nixos-23.11", label_key = "setting.option.branch.nixos_23_11" },
+    { value = "nixos-23.05", label_key = "setting.option.branch.nixos_23_05" },
+    { value = "nixos-26.05-small", label_key = "setting.option.branch.nixos_26_05_small" },
+    { value = "nixos-25.11-small", label_key = "setting.option.branch.nixos_25_11_small" },
+    { value = "nixos-25.05-small", label_key = "setting.option.branch.nixos_25_05_small" },
+    { value = "nixos-24.11-small", label_key = "setting.option.branch.nixos_24_11_small" },
+    { value = "nixos-24.05-small", label_key = "setting.option.branch.nixos_24_05_small" },
+    { value = "nixos-23.11-small", label_key = "setting.option.branch.nixos_23_11_small" },
+    { value = "nixos-23.05-small", label_key = "setting.option.branch.nixos_23_05_small" },
+]
+default         = "nixos-unstable"
+
+[[setting]]
 key             = "update_check_interval"
 type            = "int"
 label_key       = "setting.update_check_interval.label"
@@ -120,6 +146,20 @@ min             = 1
 max             = 30
 
 [[setting]]
+key             = "panel_card_color"
+type            = "color"
+label_key       = "setting.widget.panel_card_background_color.label"
+default         = "surface_variant"
+
+[[setting]]
+key             = "panel_card_opacity"
+type            = "int"
+label_key       = "setting.widget.panel_card_background_opacity.label"
+default         = 70
+min             = 0
+max             = 100
+
+[[setting]]
 key             = "show_update_check_notification"
 type            = "bool"
 label_key       = "setting.show_update_check_notification.label"
@@ -132,30 +172,6 @@ type            = "bool"
 label_key       = "setting.show_update_available_notification.label"
 description_key = "setting.show_update_available_notification.description"
 default         = true
-
-[[setting]]
-key             = "branch"
-type            = "select"
-label_key       = "setting.branch.label"
-description_key = "setting.branch.description"
-options         = [
-    { value = "master", label_key = "setting.option.branch.master" },
-    { value = "nixos-unstable", label_key = "setting.option.branch.nixos_unstable" },
-    { value = "nixos-unstable-small", label_key = "setting.option.branch.nixos_unstable_small" },
-    { value = "nixos-25.11", label_key = "setting.option.branch.nixos_25_11" },
-    { value = "nixos-25.05", label_key = "setting.option.branch.nixos_25_05" },
-    { value = "nixos-24.11", label_key = "setting.option.branch.nixos_24_11" },
-    { value = "nixos-24.05", label_key = "setting.option.branch.nixos_24_05" },
-    { value = "nixos-23.11", label_key = "setting.option.branch.nixos_23_11" },
-    { value = "nixos-23.05", label_key = "setting.option.branch.nixos_23_05" },
-    { value = "nixos-25.11-small", label_key = "setting.option.branch.nixos_25_11_small" },
-    { value = "nixos-25.05-small", label_key = "setting.option.branch.nixos_25_05_small" },
-    { value = "nixos-24.11-small", label_key = "setting.option.branch.nixos_24_11_small" },
-    { value = "nixos-24.05-small", label_key = "setting.option.branch.nixos_24_05_small" },
-    { value = "nixos-23.11-small", label_key = "setting.option.branch.nixos_23_11_small" },
-    { value = "nixos-23.05-small", label_key = "setting.option.branch.nixos_23_05_small" },
-]
-default         = "nixos-unstable"
 
 [[setting]]
 key             = "update_command"
@@ -172,6 +188,20 @@ description_key = "setting.clean_command.description"
 default         = "nix-collect-garbage -d"
 
 [[setting]]
+key             = "hide_update_button"
+type            = "bool"
+label_key       = "setting.hide_update_button.label"
+description_key = "setting.hide_update_button.description"
+default         = false
+
+[[setting]]
+key             = "hide_clean_button"
+type            = "bool"
+label_key       = "setting.hide_clean_button.label"
+description_key = "setting.hide_clean_button.description"
+default         = false
+
+[[setting]]
 key             = "close_on_enter"
 type            = "bool"
 label_key       = "setting.close_on_enter.label"
@@ -184,8 +214,8 @@ entry           = "panel.luau"
 placement       = "attached"
 position        = "auto"
 open_near_click = true
-width           = 420
-height          = 370
+width           = 430
+height          = 350
 
 [[service]]
 id      = "service"
