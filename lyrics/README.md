@@ -33,6 +33,11 @@ settings. The background `service` detects the active MPRIS player, resolves
 lyrics, downloads or caches album artwork, and publishes playback state to the
 widget.
 
+When several players are available, the service prefers a playing player, then
+a paused player, and keeps the current player when priorities are equal. The
+optional allowlist and blocklist match player names or instances and support
+`*` wildcards.
+
 Left-click the widget to switch between lyrics and track information. Right-click
 to pause or resume the active player. Paused content is dimmed and all lyric,
 transition, and marquee animation stops until playback resumes.
@@ -55,22 +60,26 @@ Plugin settings:
 
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
+| `player_allowlist` | `string_list` | empty | Only uses matching MPRIS player names or instances; supports `*` wildcards. |
+| `player_blocklist` | `string_list` | empty | Ignores matching MPRIS player names or instances; takes priority over the allowlist. |
 | `lyrics_source` | `select` | `auto` | Selects automatic fallback, LRCLIB, public NetEase, MPRIS text, custom HTTP, or external IPC. |
 | `custom_url` | `string` | empty | HTTP URL template with `{title}`, `{artist}`, `{album}`, and `{duration}` placeholders. |
 | `custom_json_field` | `string` | `syncedLyrics` | Dotted field path containing an LRC string or timed-lines array in a JSON response. |
 | `cue_text` | `string` | `•••••` | Characters highlighted through long intro or instrumental gaps. |
+| `cue_font_mode` | `select` | `follow` | Follows Noctalia's interface font or uses a custom installed font for intro/interlude characters. |
+| `cue_font_family` | `string` | `sans-serif` | Installed font family used for intro/interlude characters in custom-font mode. |
 | `scroll_mode` | `select` | `auto` | Enables automatic marquee, forced marquee, or static truncation. |
 | `marquee_speed` | `int` | `30` | Approximate long-line scroll speed in logical pixels per second. |
 | `max_lines` | `int` | `1` | Number of lines shown on a vertical bar, from 1 to 3. |
 | `gradient` | `bool` | `true` | Enables progressive per-character highlighting. |
 | `animation` | `select` | `karaoke` | Chooses karaoke, cascade, wave, fade-only, or no line transition. |
-| `max_chars` | `int` | `24` | Number of visible Unicode characters before marquee scrolling starts. |
+| `max_chars` | `int` | `15` | Number of visible Unicode characters before marquee scrolling starts. |
 | `char_width` | `int` | `9` | Estimated logical-pixel character width used for scroll timing and minimum layout width. |
 | `glyph` | `glyph` | `music` | Fallback icon shown when album artwork is unavailable. |
 | `show_artist` | `bool` | `true` | Includes the artist in track-information mode. |
 | `hide_when_paused` | `bool` | `false` | Hides the widget instead of dimming it while paused. |
 | `show_cover` | `bool` | `true` | Shows circular album artwork beside the lyrics. |
-| `active_color` | `color` | `primary` | Colors the current and already-sung lyric characters. |
+| `active_color` | `color` | `on_surface` | Colors the current and already-sung lyric characters. |
 | `inactive_color` | `color` | `on_surface_variant` | Colors upcoming lyrics, paused playback, and secondary lines. |
 
 ## IPC
@@ -102,7 +111,7 @@ Automatic mode requests LRCLIB first, then the public NetEase Music API. Custom
 HTTP mode contacts only the configured endpoint. The plugin never reads browser
 cookies or player credentials.
 
-The service runs `playerctl` to read and control MPRIS playback, `python3` for the
+The service runs `playerctl` to select, read, and control MPRIS playback, `python3` for the
 LRCLIB helper and dynamic-lyric parser, and `cp` to preserve temporary local cover
 files. Public NetEase requests use Noctalia's HTTP API. Query scratch files and
 downloaded cover images are written inside the plugin runtime directory. Remote
