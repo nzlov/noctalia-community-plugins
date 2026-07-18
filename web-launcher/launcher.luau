@@ -28,6 +28,9 @@ local links = loadLinks()
 
 local function extractDomain(url)
     local domain = url:match("^https?://([^/]+)")
+    if domain then
+        domain = domain:gsub("^.*@", "")
+    end
     return domain
 end
 
