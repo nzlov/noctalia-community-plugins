@@ -90,11 +90,19 @@ done
 shopt -s nullglob
 MANIFESTS=("$REPO_ROOT"/*/plugin.toml)
 for manifest in "${MANIFESTS[@]}"; do
-    plugin="$(basename -- "$(dirname -- "$manifest")")"
-    if ! jq -e --arg plugin "$plugin" '.en[$plugin] | type == "object"' "$RESPONSE_FILE" >/dev/null; then
-        echo "Error: English payload is missing plugin: $plugin" >&2
-        exit 1
+    plugin_dir="$(dirname -- "$manifest")"
+    plugin="$(basename -- "$plugin_dir")"
+    if jq -e --arg plugin "$plugin" '.en[$plugin] | type == "object"' "$RESPONSE_FILE" >/dev/null; then
+        continue
     fi
+
+    english_file="$plugin_dir/translations/en.json"
+    if [[ -f "$english_file" ]] && jq -e 'type == "object" and length == 0' "$english_file" >/dev/null; then
+        continue
+    fi
+
+    echo "Error: English payload is missing plugin: $plugin" >&2
+    exit 1
 done
 
 while IFS= read -r -d '' staged_file; do
