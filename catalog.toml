@@ -317,3 +317,14 @@ icon = "building-mosque"
 description = "Prayer times with live countdown, notifications, and azan."
 plugin_api = 3
 tags = ["bar", "panel", "service", "time", "utility"]
+
+[[plugin]]
+id = "dotnetrob/cat"
+name = "Cat"
+version = "1.1.2"
+author = "DotNetRob"
+license = "MIT"
+icon = "paw"
+description = "An animated running cat bar widget whose speed reflects CPU usage."
+plugin_api = 3
+tags = ["bar", "animation", "system", "fun"]
