@@ -384,3 +384,14 @@ icon = "screen-share"
 description = "A plugin to quickly enable and disable screen mirroring in Hyprland."
 plugin_api = 5
 tags = ["utility", "hyprland"]
+
+[[plugin]]
+id = "thepunkoff/pomodoro"
+name = "Pomodoro Timer"
+version = "1.0.0"
+author = "thepunkoff"
+license = "MIT"
+icon = "brain"
+description = "Simple pomodoro timer."
+plugin_api = 3
+tags = ["bar", "panel", "service", "productivity", "time"]
